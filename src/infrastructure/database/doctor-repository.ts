@@ -37,9 +37,9 @@ export class TursoDoctorRepository implements DoctorRepository {
     return this.mapRowToDoctor(result.rows[0]);
   }
 
-  async create(input: CreateDoctorInput): Promise<Doctor> {
+  async create(input: CreateDoctorInput & { id?: string }): Promise<Doctor> {
     const db = getDb();
-    const id = randomUUID();
+    const id = input.id ?? randomUUID();
     const now = new Date().toISOString();
     
     const welcomeMessage = input.welcomeMessage ?? 
@@ -79,6 +79,10 @@ export class TursoDoctorRepository implements DoctorRepository {
     if (input.name !== undefined) {
       updates.push('name = ?');
       args.push(input.name);
+    }
+    if (input.phoneNumber !== undefined) {
+      updates.push('phone_number = ?');
+      args.push(input.phoneNumber);
     }
     if (input.specialty !== undefined) {
       updates.push('specialty = ?');

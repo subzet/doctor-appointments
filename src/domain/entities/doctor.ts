@@ -30,6 +30,7 @@ export interface CreateDoctorInput {
 
 export interface UpdateDoctorInput {
   name?: string;
+  phoneNumber?: string;
   specialty?: string;
   welcomeMessage?: string;
   paymentLink?: string;

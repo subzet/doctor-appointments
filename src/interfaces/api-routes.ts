@@ -10,6 +10,30 @@ interface Dependencies {
 export function createApiRouter(deps: Dependencies): Hono {
   const router = new Hono();
 
+  // Auth/Onboarding - Create or get doctor from Firebase user
+  router.post('/auth/doctor', async (c) => {
+    const body = await c.req.json();
+    const { uid, name, email } = body;
+
+    if (!uid || !name) {
+      return c.json({ error: 'UID and name are required' }, 400);
+    }
+
+    try {
+      const result = await deps.doctorService.createOrGetDoctor({
+        id: uid,
+        name,
+        email,
+      });
+      return c.json({ 
+        doctor: result.doctor, 
+        isNew: result.isNew 
+      }, result.isNew ? 201 : 200);
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 500);
+    }
+  });
+
   // Doctor routes
   router.get('/doctors/:id', async (c) => {
     const id = c.req.param('id');
@@ -28,6 +52,21 @@ export function createApiRouter(deps: Dependencies): Hono {
     try {
       const doctor = await deps.doctorService.createDoctor(body);
       return c.json(doctor, 201);
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 400);
+    }
+  });
+
+  router.patch('/doctors/:id', async (c) => {
+    const id = c.req.param('id');
+    const body = await c.req.json();
+    
+    try {
+      const doctor = await deps.doctorService.updateDoctor(id, body);
+      if (!doctor) {
+        return c.json({ error: 'Doctor not found' }, 404);
+      }
+      return c.json(doctor);
     } catch (error) {
       return c.json({ error: (error as Error).message }, 400);
     }

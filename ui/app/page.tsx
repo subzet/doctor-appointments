@@ -11,12 +11,9 @@ import { AppointmentsTab } from './components/appointments-tab';
 import { PatientsTab } from './components/patients-tab';
 import { SettingsTab } from './components/settings-tab';
 
-// TODO: Get from auth context or env
-const DOCTOR_ID = 'doctor-id-placeholder';
-
 export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('appointments');
-  const { user, logout } = useAuth();
+  const { user, doctor, logout } = useAuth();
 
   const handleLogout = async () => {
     try {
@@ -25,6 +22,18 @@ export default function Dashboard() {
       console.error('Logout error:', error);
     }
   };
+
+  // Show loading if doctor is not yet loaded
+  if (!doctor) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -72,15 +81,15 @@ export default function Dashboard() {
           </TabsList>
 
           <TabsContent value="appointments" className="space-y-4">
-            <AppointmentsTab doctorId={DOCTOR_ID} />
+            <AppointmentsTab doctorId={doctor.id} />
           </TabsContent>
 
           <TabsContent value="patients" className="space-y-4">
-            <PatientsTab doctorId={DOCTOR_ID} />
+            <PatientsTab doctorId={doctor.id} />
           </TabsContent>
 
           <TabsContent value="settings" className="space-y-4">
-            <SettingsTab doctorId={DOCTOR_ID} />
+            <SettingsTab doctorId={doctor.id} />
           </TabsContent>
         </Tabs>
       </main>

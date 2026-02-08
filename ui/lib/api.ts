@@ -19,6 +19,19 @@ async function fetchApi<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 export const api = {
+  // Auth / Onboarding
+  createOrGetDoctor: (data: { uid: string; name: string; email: string }) =>
+    fetchApi<{ doctor: Doctor; isNew: boolean }>('/auth/doctor', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  updateDoctor: (id: string, data: Partial<Doctor>) =>
+    fetchApi<Doctor>(`/doctors/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
   // Doctors
   getDoctor: (id: string) => fetchApi<Doctor>(`/doctors/${id}`),
   

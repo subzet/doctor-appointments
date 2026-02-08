@@ -42,6 +42,12 @@
 
 - [x] Next.js project setup
 - [x] Authentication with Firebase
+- [x] Google Sign-In
+- [x] Onboarding flow for new doctors
+  - [x] Backend: `POST /api/auth/doctor` endpoint
+  - [x] Backend: `PATCH /api/doctors/:id` endpoint
+  - [x] Frontend: Onboarding page
+  - [x] Frontend: Auth context with doctor sync
 - [x] Dashboard with upcoming appointments
 - [x] Calendar view (read-only for now)
 - [ ] Chat history viewer
@@ -84,11 +90,18 @@
 
 **Phase:** 4-5 (Admin UI + Patient Management)
 
+**Completed Today:**
+1. ✅ Firebase Google Sign-In
+2. ✅ Onboarding flow for new doctors
+3. ✅ Doctor creation/sync on first login
+4. ✅ Dynamic doctor ID in dashboard
+
 **Next Tasks:**
-1. Add authentication to admin UI
-2. Implement cron job for reminders
-3. Add tests for services
-4. Mercado Pago subscription integration
+1. Test onboarding flow end-to-end
+2. Add proper error handling in auth flow
+3. Implement cron job for reminders
+4. Add tests for services
+5. Mercado Pago subscription integration
 
 **Blocked by:** None
 
@@ -107,11 +120,14 @@ doctor-appointments/
 ├── ui/                      # Next.js admin dashboard
 │   ├── app/
 │   │   ├── components/      # Appointments, Patients, Settings tabs
+│   │   ├── onboarding/      # Onboarding page for new doctors
+│   │   ├── login/           # Login page
 │   │   ├── page.tsx         # Dashboard main page
 │   │   └── layout.tsx
 │   ├── components/ui/       # shadcn/ui components
 │   └── lib/
 │       ├── api.ts           # API client
+│       ├── auth-context.tsx # Auth provider with onboarding
 │       └── types.ts         # TypeScript types
 ├── scripts/
 │   ├── migrate.ts           # Database migrations
