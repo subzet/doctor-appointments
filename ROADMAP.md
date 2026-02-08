@@ -41,7 +41,7 @@
 **Goal:** Web interface for doctors
 
 - [x] Next.js project setup
-- [ ] Authentication (simple password or magic link)
+- [x] Authentication with Firebase
 - [x] Dashboard with upcoming appointments
 - [x] Calendar view (read-only for now)
 - [ ] Chat history viewer
