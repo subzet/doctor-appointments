@@ -2,9 +2,11 @@ export interface Doctor {
   id: string;
   name: string;
   phoneNumber: string;
+  whatsappNumber?: string;
   specialty?: string;
   welcomeMessage: string;
   paymentLink?: string;
+  whitelistMode: boolean;
   calendarConfig: {
     workingHours: {
       day: number;
@@ -17,6 +19,15 @@ export interface Doctor {
   subscriptionExpiresAt?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface WhitelistEntry {
+  id: string;
+  doctorId: string;
+  phoneNumber: string;
+  patientName?: string;
+  notes?: string;
+  createdAt: string;
 }
 
 export interface Patient {

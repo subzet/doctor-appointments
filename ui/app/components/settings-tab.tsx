@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
 import { api } from '@/lib/api';
-import { Doctor } from '@/lib/types';
-import { Save, Clock, CreditCard, MessageSquare } from 'lucide-react';
+import { Doctor, WhitelistEntry } from '@/lib/types';
+import { Save, Clock, CreditCard, MessageSquare, Phone, Shield, Trash2, Plus } from 'lucide-react';
 
 interface SettingsTabProps {
   doctorId: string;
@@ -17,28 +18,42 @@ interface SettingsTabProps {
 
 export function SettingsTab({ doctorId }: SettingsTabProps) {
   const [doctor, setDoctor] = useState<Doctor | null>(null);
+  const [whitelist, setWhitelist] = useState<WhitelistEntry[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   
   // Form state
   const [welcomeMessage, setWelcomeMessage] = useState('');
   const [paymentLink, setPaymentLink] = useState('');
+  const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [whitelistMode, setWhitelistMode] = useState(false);
   const [slotDuration, setSlotDuration] = useState(30);
+  
+  // New whitelist entry
+  const [newPhoneNumber, setNewPhoneNumber] = useState('');
+  const [newPatientName, setNewPatientName] = useState('');
+  const [addingToWhitelist, setAddingToWhitelist] = useState(false);
 
   useEffect(() => {
-    loadDoctor();
+    loadData();
   }, [doctorId]);
 
-  async function loadDoctor() {
+  async function loadData() {
     try {
       setLoading(true);
-      const data = await api.getDoctor(doctorId);
-      setDoctor(data);
-      setWelcomeMessage(data.welcomeMessage);
-      setPaymentLink(data.paymentLink || '');
-      setSlotDuration(data.calendarConfig.slotDurationMinutes);
+      const [doctorData, whitelistData] = await Promise.all([
+        api.getDoctor(doctorId),
+        api.getWhitelist(doctorId),
+      ]);
+      setDoctor(doctorData);
+      setWhitelist(whitelistData);
+      setWelcomeMessage(doctorData.welcomeMessage);
+      setPaymentLink(doctorData.paymentLink || '');
+      setWhatsappNumber(doctorData.whatsappNumber || '');
+      setWhitelistMode(doctorData.whitelistMode);
+      setSlotDuration(doctorData.calendarConfig.slotDurationMinutes);
     } catch (error) {
-      console.error('Failed to load doctor:', error);
+      console.error('Failed to load data:', error);
     } finally {
       setLoading(false);
     }
@@ -47,13 +62,50 @@ export function SettingsTab({ doctorId }: SettingsTabProps) {
   async function handleSave() {
     try {
       setSaving(true);
-      // TODO: Implement update API
-      alert('Configuración guardada (simulado)');
+      await api.updateDoctor(doctorId, {
+        welcomeMessage,
+        paymentLink,
+        whatsappNumber,
+        whitelistMode,
+      });
+      alert('Configuración guardada');
     } catch (error) {
       console.error('Failed to save settings:', error);
       alert('Error al guardar la configuración');
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAddToWhitelist() {
+    if (!newPhoneNumber) return;
+    
+    try {
+      setAddingToWhitelist(true);
+      await api.addToWhitelist(doctorId, {
+        phoneNumber: newPhoneNumber,
+        patientName: newPatientName || undefined,
+      });
+      setNewPhoneNumber('');
+      setNewPatientName('');
+      await loadData();
+    } catch (error) {
+      console.error('Failed to add to whitelist:', error);
+      alert('Error al agregar el número');
+    } finally {
+      setAddingToWhitelist(false);
+    }
+  }
+
+  async function handleRemoveFromWhitelist(id: string) {
+    if (!confirm('¿Estás seguro de que querés eliminar este número?')) return;
+    
+    try {
+      await api.removeFromWhitelist(id);
+      await loadData();
+    } catch (error) {
+      console.error('Failed to remove from whitelist:', error);
+      alert('Error al eliminar el número');
     }
   }
 
@@ -97,6 +149,116 @@ export function SettingsTab({ doctorId }: SettingsTabProps) {
               </span>
             )}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* WhatsApp Configuration */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Phone className="h-5 w-5" />
+            <CardTitle>Configuración de WhatsApp</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="whatsapp">Número de WhatsApp Business</Label>
+            <Input
+              id="whatsapp"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+              placeholder="+54 9 11 1234-5678"
+            />
+            <p className="text-xs text-muted-foreground">
+              Este es el número que los pacientes usarán para contactarte por WhatsApp.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Whitelist Configuration */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              <CardTitle>Lista de autorizados (Whitelist)</CardTitle>
+            </div>
+            <div className="flex items-center gap-2">
+              <Label htmlFor="whitelist-mode" className="text-sm">Activar</Label>
+              <Switch
+                id="whitelist-mode"
+                checked={whitelistMode}
+                onCheckedChange={setWhitelistMode}
+              />
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {whitelistMode ? (
+            <>
+              <p className="text-sm text-muted-foreground">
+                Cuando está activo, solo los números en esta lista pueden usar el bot para reservar turnos.
+                Útil para períodos de prueba.
+              </p>
+
+              {/* Add new entry */}
+              <div className="flex gap-2">
+                <Input
+                  placeholder="Número de teléfono"
+                  value={newPhoneNumber}
+                  onChange={(e) => setNewPhoneNumber(e.target.value)}
+                />
+                <Input
+                  placeholder="Nombre del paciente (opcional)"
+                  value={newPatientName}
+                  onChange={(e) => setNewPatientName(e.target.value)}
+                />
+                <Button 
+                  onClick={handleAddToWhitelist} 
+                  disabled={!newPhoneNumber || addingToWhitelist}
+                  size="icon"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Whitelist entries */}
+              {whitelist.length > 0 ? (
+                <div className="space-y-2">
+                  {whitelist.map((entry) => (
+                    <div 
+                      key={entry.id} 
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div>
+                        <p className="font-medium">{entry.phoneNumber}</p>
+                        {entry.patientName && (
+                          <p className="text-sm text-muted-foreground">{entry.patientName}</p>
+                        )}
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveFromWhitelist(entry.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No hay números en la lista. Agregá números para permitirles usar el bot.
+                </p>
+              )}
+            </>
+          ) : (
+            <p className="text-sm text-muted-foreground">
+              El modo whitelist está desactivado. Cualquier paciente puede usar el bot para reservar turnos.
+              Activá esta opción si querés restringir el acceso solo a números autorizados.
+            </p>
+          )}
         </CardContent>
       </Card>
 
