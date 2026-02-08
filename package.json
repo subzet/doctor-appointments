@@ -9,6 +9,7 @@
     "start": "bun dist/index.js",
     "test": "bun test",
     "migrate": "bun run scripts/migrate.ts",
+    "reminders": "bun run scripts/send-reminders.ts",
     "deploy": "railway up"
   },
   "dependencies": {

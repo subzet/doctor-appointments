@@ -1,8 +1,44 @@
 import { Hono } from 'hono';
 import { closeDb } from './infrastructure/database/client.js';
+import { TursoDoctorRepository } from './infrastructure/database/doctor-repository.js';
+import { TursoPatientRepository } from './infrastructure/database/patient-repository.js';
+import { TursoAppointmentRepository } from './infrastructure/database/appointment-repository.js';
+import { KapsoWhatsAppService } from './infrastructure/whatsapp/kapso-service.js';
+import { 
+  DoctorService, 
+  PatientService, 
+  AppointmentService 
+} from './application/index.js';
+import { BotFlowHandler } from './application/bot-flow-handler.js';
+import { createWebhookRouter, createApiRouter } from './interfaces/index.js';
 
+// Initialize repositories
+const doctorRepository = new TursoDoctorRepository();
+const patientRepository = new TursoPatientRepository();
+const appointmentRepository = new TursoAppointmentRepository();
+
+// Initialize services
+const whatsAppService = new KapsoWhatsAppService();
+const doctorService = new DoctorService(doctorRepository);
+const patientService = new PatientService(patientRepository);
+const appointmentService = new AppointmentService(
+  appointmentRepository,
+  patientRepository,
+  whatsAppService
+);
+
+// Initialize bot flow handler
+const botFlowHandler = new BotFlowHandler(
+  doctorService,
+  patientService,
+  appointmentService,
+  whatsAppService
+);
+
+// Create main app
 const app = new Hono();
 
+// Health check
 app.get('/', (c) => {
   return c.json({ 
     name: 'Doctor Appointments API',
@@ -14,6 +50,19 @@ app.get('/', (c) => {
 app.get('/health', (c) => {
   return c.json({ status: 'healthy' });
 });
+
+// Mount routes
+app.route('/api', createApiRouter({
+  doctorService,
+  patientService,
+  appointmentService,
+}));
+
+app.route('/', createWebhookRouter({
+  botFlowHandler,
+  appointmentService,
+  doctorService,
+}));
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

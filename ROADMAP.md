@@ -1,37 +1,38 @@
 # ROADMAP.md — Doctor Appointments
 
-## Phase 1: Foundation
+## Phase 1: Foundation ✅
 **Goal:** Core infrastructure and WhatsApp integration
 
-- [ ] Initialize Bun + TypeScript project
-- [ ] Set up Hexagonal Architecture folder structure
-- [ ] Configure Turso database schema
-  - [ ] Doctors table
-  - [ ] Patients table
-  - [ ] Appointments table
-  - [ ] Configurations table
-- [ ] Set up WhatsApp Business API integration (Kapso AI)
-- [ ] Create domain entities (Doctor, Patient, Appointment)
-- [ ] Implement basic message handler
-- [ ] Add environment configuration
+- [x] Initialize Bun + TypeScript project
+- [x] Set up Hexagonal Architecture folder structure
+- [x] Configure Turso database schema
+  - [x] Doctors table
+  - [x] Patients table
+  - [x] Appointments table
+  - [x] Configurations table
+- [x] Set up WhatsApp Business API integration (Kapso AI) - placeholder
+- [x] Create domain entities (Doctor, Patient, Appointment)
+- [x] Implement basic message handler
+- [x] Add environment configuration
 
-## Phase 2: Core Bot Flow
+## Phase 2: Core Bot Flow 🚧
 **Goal:** Working appointment booking via WhatsApp
 
-- [ ] Configurable welcome message per doctor
-- [ ] Fetch available slots from calendar
-- [ ] Book appointment flow
-  - [ ] Ask for patient name
-  - [ ] Confirm slot
-  - [ ] Save to database
-- [ ] Send payment information (Mercado Pago link)
-- [ ] Appointment confirmation message
+- [x] Configurable welcome message per doctor
+- [x] Fetch available slots from calendar
+- [x] Book appointment flow
+  - [x] Ask for patient name
+  - [x] Confirm slot
+  - [x] Save to database
+- [x] Send payment information (Mercado Pago link)
+- [x] Appointment confirmation message
 - [ ] Basic error handling and fallbacks
 
-## Phase 3: Notifications
+## Phase 3: Notifications ✅
 **Goal:** Automated reminders and follow-ups
 
-- [ ] 24-hour reminder via WhatsApp
+- [x] 24-hour reminder via WhatsApp
+- [x] Script for daily reminders
 - [ ] Cron job setup for daily reminders
 - [ ] Reschedule/cancel flow
 - [ ] Missed appointment handling
@@ -81,8 +82,12 @@
 
 ## Current Status
 
-**Phase:** 1 (Foundation)
+**Phase:** 2-3 (Core Bot Flow + Notifications)
 
-**Next Task:** Initialize project structure and Turso schema
+**Next Tasks:**
+1. Add tests for services
+2. Implement reschedule/cancel flow
+3. Set up cron job for reminders
+4. Start Admin UI (Next.js)
 
 **Blocked by:** None
