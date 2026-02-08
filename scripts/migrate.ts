@@ -1,5 +1,5 @@
-import { getDb, closeDb } from './client.js';
-import { schema } from './schema.js';
+import { getDb, closeDb } from '../src/infrastructure/database/client.js';
+import { schema } from '../src/infrastructure/database/schema.js';
 
 async function migrate() {
   console.log('Running migrations...');
