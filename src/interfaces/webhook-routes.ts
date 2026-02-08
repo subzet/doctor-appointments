@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
 import type { BotFlowHandler } from '../application/bot-flow-handler.js';
 import type { AppointmentService, DoctorService } from '../application/index.js';
+import { KapsoSetupService } from '../infrastructure/kapso/kapso-setup-service.js';
 
 interface Dependencies {
   botFlowHandler: BotFlowHandler;
   appointmentService: AppointmentService;
   doctorService: DoctorService;
+  kapsoSetupService?: KapsoSetupService;
 }
 
 export function createWebhookRouter(deps: Dependencies): Hono {
@@ -38,21 +40,49 @@ export function createWebhookRouter(deps: Dependencies): Hono {
     return c.json({ status: 'received' });
   });
 
+  // Kapso webhook for phone number connection events
+  // This is called when a doctor completes the WhatsApp setup flow
+  router.post('/webhooks/kapso', async (c) => {
+    const body = await c.req.json();
+    console.log('Kapso webhook received:', body);
+
+    if (!deps.kapsoSetupService) {
+      return c.json({ error: 'Kapso service not configured' }, 500);
+    }
+
+    // Handle phone_number.connected event
+    const phoneData = deps.kapsoSetupService.parsePhoneConnectedWebhook(body);
+    
+    if (phoneData) {
+      try {
+        // Update doctor with connected phone number info
+        await deps.doctorService.updateDoctor(phoneData.doctorId, {
+          kapsoPhoneNumberId: phoneData.phoneNumberId,
+          kapsoWabaId: phoneData.wabaId,
+          whatsappNumber: phoneData.phoneNumber,
+          whatsappStatus: 'connected',
+        });
+
+        console.log(`Doctor ${phoneData.doctorId} WhatsApp connected: ${phoneData.phoneNumber}`);
+        return c.json({ status: 'ok', event: 'phone_number.connected' });
+      } catch (error) {
+        console.error('Error updating doctor WhatsApp status:', error);
+        return c.json({ error: 'Failed to update doctor' }, 500);
+      }
+    }
+
+    // Handle incoming messages
+    const message = deps.botFlowHandler.parseIncomingMessage(body);
+    if (message) {
+      // Process message asynchronously using the phoneNumberId from the webhook
+      deps.botFlowHandler.handleIncomingMessage(message.from, message.body, message.phoneNumberId)
+        .catch(err => console.error('Error handling message:', err));
+
+      return c.json({ status: 'ok', event: 'message.inbound' });
+    }
+
+    return c.json({ status: 'ok', event: 'unknown' });
+  });
+
   return router;
-}
-
-function parseWhatsAppPayload(payload: unknown): { from?: string; message?: string } {
-  // TODO: Adjust based on Kapso AI actual webhook format
-  // This is a placeholder implementation
-  if (typeof payload !== 'object' || payload === null) {
-    return {};
-  }
-
-  const p = payload as Record<string, unknown>;
-  
-  // Common webhook formats
-  return {
-    from: p.from as string || p.phone_number as string || p.sender as string,
-    message: p.message as string || p.body as string || p.text as string,
-  };
 }

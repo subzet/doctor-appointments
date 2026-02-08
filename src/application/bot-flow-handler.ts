@@ -21,11 +21,11 @@ export class BotFlowHandler {
     private whitelistService: WhitelistService
   ) {}
 
-  async handleIncomingMessage(from: string, body: string, doctorPhoneNumber: string): Promise<void> {
-    const doctor = await this.doctorService.getDoctorByPhoneNumber(doctorPhoneNumber);
+  async handleIncomingMessage(from: string, body: string, phoneNumberId: string): Promise<void> {
+    const doctor = await this.doctorService.getDoctorByKapsoPhoneNumberId(phoneNumberId);
     
     if (!doctor) {
-      console.error(`Doctor not found for phone number: ${doctorPhoneNumber}`);
+      console.error(`Doctor not found for phone number ID: ${phoneNumberId}`);
       return;
     }
 
@@ -34,6 +34,7 @@ export class BotFlowHandler {
       const isAllowed = await this.whitelistService.isPhoneNumberAllowed(doctor.id, from);
       if (!isAllowed) {
         await this.whatsAppService.sendMessage(
+          doctor.kapsoPhoneNumberId!,
           from,
           'Lo sentimos, este número no está autorizado para reservar turnos. Por favor, contactá al consultorio para más información.'
         );
@@ -45,6 +46,7 @@ export class BotFlowHandler {
     const isActive = await this.doctorService.isSubscriptionActive(doctor);
     if (!isActive) {
       await this.whatsAppService.sendMessage(
+        doctor.kapsoPhoneNumberId!,
         from,
         'Lo sentimos, el servicio no está disponible en este momento.'
       );
@@ -84,6 +86,7 @@ export class BotFlowHandler {
     this.appointmentService.createSession(from, doctor.id);
     
     await this.whatsAppService.sendMessage(
+      doctor.kapsoPhoneNumberId!,
       from,
       `¡Perfecto! Vamos a reservar tu turno con el Dr./Dra. ${doctor.name}.\n\n¿Cómo te llamás?`
     );
@@ -140,6 +143,7 @@ export class BotFlowHandler {
     
     if (slots.length === 0) {
       await this.whatsAppService.sendMessage(
+        doctor.kapsoPhoneNumberId!,
         from,
         'Lo sentimos, no hay turnos disponibles en los próximos días. Por favor, contactá directamente al consultorio.'
       );
@@ -149,6 +153,7 @@ export class BotFlowHandler {
 
     const slotsMessage = this.formatSlotsMessage(slots);
     await this.whatsAppService.sendMessage(
+      doctor.kapsoPhoneNumberId!,
       from,
       `Gracias, ${name}. Estos son los próximos turnos disponibles:\n\n${slotsMessage}\n\nRespondé con el número del turno que prefieras (1-${slots.length}).`
     );
@@ -168,6 +173,7 @@ export class BotFlowHandler {
 
     if (isNaN(slotIndex) || slotIndex < 0 || slotIndex >= (availableSlots?.length || 0)) {
       await this.whatsAppService.sendMessage(
+        doctor.kapsoPhoneNumberId!,
         from,
         'Por favor, respondé con un número válido de la lista.'
       );
@@ -192,6 +198,7 @@ export class BotFlowHandler {
     });
 
     await this.whatsAppService.sendMessage(
+      doctor.kapsoPhoneNumberId!,
       from,
       `¿Confirmás el turno para el ${dateStr} a las ${timeStr}?\n\nRespondé *SÍ* para confirmar o *NO* para elegir otro horario.`
     );
@@ -206,6 +213,7 @@ export class BotFlowHandler {
     if (message === 'si' || message === 'sí') {
       if (!session.patientId || !session.selectedDate) {
         await this.whatsAppService.sendMessage(
+          doctor.kapsoPhoneNumberId!,
           from,
           'Hubo un error. Por favor, empezá de nuevo escribiendo *TURNO*.'
         );
@@ -237,6 +245,7 @@ export class BotFlowHandler {
       const slotsMessage = this.formatSlotsMessage(slots);
       
       await this.whatsAppService.sendMessage(
+        doctor.kapsoPhoneNumberId!,
         from,
         `Estos son los turnos disponibles:\n\n${slotsMessage}\n\nRespondé con el número del turno que prefieras (1-${slots.length}).`
       );
@@ -244,6 +253,7 @@ export class BotFlowHandler {
       (session as unknown as Record<string, unknown>).availableSlots = slots;
     } else {
       await this.whatsAppService.sendMessage(
+        doctor.kapsoPhoneNumberId!,
         from,
         'Por favor, respondé *SÍ* para confirmar o *NO* para elegir otro horario.'
       );
@@ -253,6 +263,7 @@ export class BotFlowHandler {
   private async handleCancellation(from: string, doctor: Doctor): Promise<void> {
     // TODO: Implement cancellation flow
     await this.whatsAppService.sendMessage(
+      doctor.kapsoPhoneNumberId!,
       from,
       'Para cancelar tu turno, por favor contactá directamente al consultorio.'
     );
@@ -260,12 +271,12 @@ export class BotFlowHandler {
 
   private async sendWelcomeMessage(from: string, doctor: Doctor): Promise<void> {
     const message = doctor.welcomeMessage + '\n\nEscribí *TURNO* para reservar una consulta o *AYUDA* para ver las opciones.';
-    await this.whatsAppService.sendMessage(from, message);
+    await this.whatsAppService.sendMessage(doctor.kapsoPhoneNumberId!, from, message);
   }
 
   private async sendHelpMessage(from: string, doctor: Doctor): Promise<void> {
     const message = `*Opciones disponibles:*\n\n• Escribí *TURNO* para reservar una consulta\n• Escribí *CANCELAR* para cancelar un turno existente\n• Escribí *AYUDA* para ver este mensaje\n\n_Dr./Dra. ${doctor.name}_`;
-    await this.whatsAppService.sendMessage(from, message);
+    await this.whatsAppService.sendMessage(doctor.kapsoPhoneNumberId!, from, message);
   }
 
   private async getNextAvailableSlots(doctorId: string, days: number): Promise<TimeSlot[]> {
@@ -300,5 +311,30 @@ export class BotFlowHandler {
         return `${index + 1}. ${dateStr} - ${timeStr}`;
       })
       .join('\n');
+  }
+
+  /**
+   * Parse incoming webhook message from Kapso
+   */
+  parseIncomingMessage(payload: unknown): { from: string; body: string; phoneNumberId: string } | null {
+    if (typeof payload !== 'object' || payload === null) {
+      return null;
+    }
+
+    const p = payload as Record<string, unknown>;
+    
+    // Kapso webhook format for inbound messages
+    if (p.event === 'message.inbound' && p.data) {
+      const data = p.data as Record<string, unknown>;
+      const message = data.message as Record<string, unknown>;
+      
+      return {
+        from: data.from as string,
+        body: message.text?.body as string || '',
+        phoneNumberId: data.phone_number_id as string,
+      };
+    }
+
+    return null;
   }
 }

@@ -6,6 +6,7 @@ import { TursoPatientRepository } from './infrastructure/database/patient-reposi
 import { TursoAppointmentRepository } from './infrastructure/database/appointment-repository.js';
 import { TursoWhitelistRepository } from './infrastructure/database/whitelist-repository.js';
 import { KapsoWhatsAppService } from './infrastructure/whatsapp/kapso-service.js';
+import { KapsoSetupService } from './infrastructure/kapso/kapso-setup-service.js';
 import { 
   DoctorService, 
   PatientService, 
@@ -23,6 +24,7 @@ const whitelistRepository = new TursoWhitelistRepository();
 
 // Initialize services
 const whatsAppService = new KapsoWhatsAppService();
+const kapsoSetupService = new KapsoSetupService();
 const doctorService = new DoctorService(doctorRepository);
 const patientService = new PatientService(patientRepository);
 const appointmentService = new AppointmentService(
@@ -71,12 +73,14 @@ app.route('/api', createApiRouter({
   patientService,
   appointmentService,
   whitelistService,
+  kapsoSetupService,
 }));
 
 app.route('/', createWebhookRouter({
   botFlowHandler,
   appointmentService,
   doctorService,
+  kapsoSetupService,
 }));
 
 // Graceful shutdown

@@ -1,11 +1,13 @@
 import { Hono } from 'hono';
 import type { DoctorService, PatientService, AppointmentService, WhitelistService } from '../application/index.js';
+import { KapsoSetupService } from '../infrastructure/kapso/kapso-setup-service.js';
 
 interface Dependencies {
   doctorService: DoctorService;
   patientService: PatientService;
   appointmentService: AppointmentService;
   whitelistService: WhitelistService;
+  kapsoSetupService?: KapsoSetupService;
 }
 
 export function createApiRouter(deps: Dependencies): Hono {
@@ -186,6 +188,93 @@ export function createApiRouter(deps: Dependencies): Hono {
     }
     
     return c.json({ status: 'cancelled' });
+  });
+
+  // Kapso Setup Links - WhatsApp Onboarding
+  // POST /api/doctors/:id/setup-link - Create a new setup link
+  router.post('/doctors/:id/setup-link', async (c) => {
+    const id = c.req.param('id');
+    const doctor = await deps.doctorService.getDoctorById(id);
+    
+    if (!doctor) {
+      return c.json({ error: 'Doctor not found' }, 404);
+    }
+
+    if (!deps.kapsoSetupService) {
+      return c.json({ error: 'Kapso service not configured' }, 500);
+    }
+
+    try {
+      const setupLink = await deps.kapsoSetupService.createSetupLink(id, doctor.name);
+      
+      // Save the setup link ID to the doctor record
+      await deps.doctorService.updateDoctor(id, {
+        kapsoSetupLinkId: setupLink.id,
+        whatsappStatus: 'pending',
+      });
+
+      return c.json({
+        setupLinkId: setupLink.id,
+        url: setupLink.url,
+        status: setupLink.status,
+      }, 201);
+    } catch (error) {
+      console.error('Error creating setup link:', error);
+      return c.json({ error: 'Failed to create setup link' }, 500);
+    }
+  });
+
+  // GET /api/doctors/:id/whatsapp-status - Check WhatsApp connection status
+  router.get('/doctors/:id/whatsapp-status', async (c) => {
+    const id = c.req.param('id');
+    const doctor = await deps.doctorService.getDoctorById(id);
+    
+    if (!doctor) {
+      return c.json({ error: 'Doctor not found' }, 404);
+    }
+
+    // If already connected, return cached status
+    if (doctor.whatsappStatus === 'connected' && doctor.kapsoPhoneNumberId) {
+      return c.json({
+        status: doctor.whatsappStatus,
+        phoneNumberId: doctor.kapsoPhoneNumberId,
+        wabaId: doctor.kapsoWabaId,
+        connectedAt: doctor.updatedAt,
+      });
+    }
+
+    // Check for connected phone numbers via Kapso API
+    if (deps.kapsoSetupService && doctor.whatsappStatus === 'pending') {
+      try {
+        const phoneNumbers = await deps.kapsoSetupService.getConnectedPhoneNumbers(id);
+        
+        if (phoneNumbers.length > 0) {
+          const primaryNumber = phoneNumbers[0];
+          
+          // Update doctor with connected phone number
+          await deps.doctorService.updateDoctor(id, {
+            kapsoPhoneNumberId: primaryNumber.id,
+            kapsoWabaId: primaryNumber.wabaId,
+            whatsappStatus: 'connected',
+          });
+
+          return c.json({
+            status: 'connected',
+            phoneNumberId: primaryNumber.id,
+            wabaId: primaryNumber.wabaId,
+            phoneNumber: primaryNumber.phoneNumber,
+            displayName: primaryNumber.displayName,
+          });
+        }
+      } catch (error) {
+        console.error('Error checking phone numbers:', error);
+      }
+    }
+
+    return c.json({
+      status: doctor.whatsappStatus,
+      setupLinkId: doctor.kapsoSetupLinkId,
+    });
   });
 
   return router;

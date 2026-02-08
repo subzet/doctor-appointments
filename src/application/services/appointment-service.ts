@@ -99,8 +99,14 @@ export class AppointmentService {
   }
 
   async sendPaymentInfo(doctor: Doctor, patient: Patient): Promise<void> {
+    if (!doctor.kapsoPhoneNumberId) {
+      console.error('Doctor does not have WhatsApp configured');
+      return;
+    }
+
     if (!doctor.paymentLink) {
       await this.whatsAppService.sendMessage(
+        doctor.kapsoPhoneNumberId,
         patient.phoneNumber,
         'La consulta debe ser abonada en el consultorio. ¡Te espero!'
       );
@@ -108,7 +114,7 @@ export class AppointmentService {
     }
 
     const message = `Para confirmar tu turno, por favor realizá el pago aquí: ${doctor.paymentLink}\n\nUna vez realizado, responderé con tu confirmación.`;
-    await this.whatsAppService.sendMessage(patient.phoneNumber, message);
+    await this.whatsAppService.sendMessage(doctor.kapsoPhoneNumberId, patient.phoneNumber, message);
   }
 
   async sendAppointmentConfirmation(
@@ -116,6 +122,11 @@ export class AppointmentService {
     appointment: Appointment,
     doctor: Doctor
   ): Promise<void> {
+    if (!doctor.kapsoPhoneNumberId) {
+      console.error('Doctor does not have WhatsApp configured');
+      return;
+    }
+
     const dateStr = appointment.scheduledAt.toLocaleDateString('es-AR', {
       weekday: 'long',
       day: 'numeric',
@@ -128,10 +139,15 @@ export class AppointmentService {
 
     const message = `✅ *Turno confirmado*\n\n📅 ${dateStr}\n🕐 ${timeStr}\n👨‍⚕️ Dr./Dra. ${doctor.name}\n\n*Dirección:* [Agregar dirección del consultorio]\n\nTe enviaré un recordatorio el día anterior. ¡Gracias por confiar en nosotros!`;
 
-    await this.whatsAppService.sendMessage(patient.phoneNumber, message);
+    await this.whatsAppService.sendMessage(doctor.kapsoPhoneNumberId, patient.phoneNumber, message);
   }
 
   async sendReminder(appointment: Appointment, patient: Patient, doctor: Doctor): Promise<void> {
+    if (!doctor.kapsoPhoneNumberId) {
+      console.error('Doctor does not have WhatsApp configured');
+      return;
+    }
+
     const dateStr = appointment.scheduledAt.toLocaleDateString('es-AR', {
       weekday: 'long',
       day: 'numeric',
@@ -144,6 +160,6 @@ export class AppointmentService {
 
     const message = `⏰ *Recordatorio de turno*\n\nHola ${patient.name}, te recordamos que mañana tenés turno:\n\n📅 ${dateStr}\n🕐 ${timeStr}\n👨‍⚕️ Dr./Dra. ${doctor.name}\n\n¿Confirmás tu asistencia? Respondé *SÍ* para confirmar o *NO* para cancelar.`;
 
-    await this.whatsAppService.sendMessage(patient.phoneNumber, message);
+    await this.whatsAppService.sendMessage(doctor.kapsoPhoneNumberId, patient.phoneNumber, message);
   }
 }

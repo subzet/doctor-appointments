@@ -18,6 +18,11 @@ export interface Doctor {
   };
   subscriptionStatus: 'active' | 'inactive' | 'trial';
   subscriptionExpiresAt?: Date;
+  // Kapso WhatsApp integration
+  kapsoSetupLinkId?: string;
+  kapsoPhoneNumberId?: string;
+  kapsoWabaId?: string;
+  whatsappStatus: 'pending' | 'connected' | 'error';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -43,6 +48,11 @@ export interface UpdateDoctorInput {
   calendarConfig?: Doctor['calendarConfig'];
   subscriptionStatus?: Doctor['subscriptionStatus'];
   subscriptionExpiresAt?: Date;
+  // Kapso WhatsApp integration
+  kapsoSetupLinkId?: string;
+  kapsoPhoneNumberId?: string;
+  kapsoWabaId?: string;
+  whatsappStatus?: Doctor['whatsappStatus'];
 }
 
 // Whitelist entry for allowed patient phone numbers

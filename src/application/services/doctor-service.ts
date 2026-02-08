@@ -11,6 +11,10 @@ export class DoctorService {
     return this.doctorRepository.findByPhoneNumber(phoneNumber);
   }
 
+  async getDoctorByKapsoPhoneNumberId(phoneNumberId: string): Promise<Doctor | null> {
+    return this.doctorRepository.findByKapsoPhoneNumberId(phoneNumberId);
+  }
+
   async createDoctor(input: {
     id?: string;
     name: string;

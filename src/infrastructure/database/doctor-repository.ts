@@ -26,6 +26,17 @@ export class TursoDoctorRepository implements DoctorRepository {
     return this.mapRowToDoctor(result.rows[0]);
   }
 
+  async findByKapsoPhoneNumberId(phoneNumberId: string): Promise<Doctor | null> {
+    const db = getDb();
+    const result = await db.execute({
+      sql: 'SELECT * FROM doctors WHERE kapso_phone_number_id = ?',
+      args: [phoneNumberId],
+    });
+    
+    if (result.rows.length === 0) return null;
+    return this.mapRowToDoctor(result.rows[0]);
+  }
+
   async findByPhoneNumber(phoneNumber: string): Promise<Doctor | null> {
     const db = getDb();
     const result = await db.execute({
@@ -47,8 +58,8 @@ export class TursoDoctorRepository implements DoctorRepository {
     
     await db.execute({
       sql: `
-        INSERT INTO doctors (id, name, phone_number, whatsapp_number, specialty, welcome_message, payment_link, calendar_config, whitelist_mode, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO doctors (id, name, phone_number, whatsapp_number, specialty, welcome_message, payment_link, calendar_config, whitelist_mode, whatsapp_status, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
         id,
@@ -60,6 +71,7 @@ export class TursoDoctorRepository implements DoctorRepository {
         input.paymentLink ?? null,
         JSON.stringify(DEFAULT_CALENDAR_CONFIG),
         input.whitelistMode ? 1 : 0,
+        'pending',
         now,
         now,
       ],
@@ -118,6 +130,22 @@ export class TursoDoctorRepository implements DoctorRepository {
       updates.push('subscription_expires_at = ?');
       args.push(input.subscriptionExpiresAt.toISOString());
     }
+    if (input.kapsoSetupLinkId !== undefined) {
+      updates.push('kapso_setup_link_id = ?');
+      args.push(input.kapsoSetupLinkId);
+    }
+    if (input.kapsoPhoneNumberId !== undefined) {
+      updates.push('kapso_phone_number_id = ?');
+      args.push(input.kapsoPhoneNumberId);
+    }
+    if (input.kapsoWabaId !== undefined) {
+      updates.push('kapso_waba_id = ?');
+      args.push(input.kapsoWabaId);
+    }
+    if (input.whatsappStatus !== undefined) {
+      updates.push('whatsapp_status = ?');
+      args.push(input.whatsappStatus);
+    }
 
     if (updates.length === 0) return existing;
 
@@ -155,6 +183,10 @@ export class TursoDoctorRepository implements DoctorRepository {
       calendarConfig: JSON.parse(row.calendar_config as string),
       subscriptionStatus: row.subscription_status as Doctor['subscriptionStatus'],
       subscriptionExpiresAt: row.subscription_expires_at ? new Date(row.subscription_expires_at as string) : undefined,
+      kapsoSetupLinkId: row.kapso_setup_link_id as string | undefined,
+      kapsoPhoneNumberId: row.kapso_phone_number_id as string | undefined,
+      kapsoWabaId: row.kapso_waba_id as string | undefined,
+      whatsappStatus: (row.whatsapp_status as Doctor['whatsappStatus']) || 'pending',
       createdAt: new Date(row.created_at as string),
       updatedAt: new Date(row.updated_at as string),
     };

@@ -6,6 +6,6 @@ export interface WhatsAppMessage {
 }
 
 export interface WhatsAppService {
-  sendMessage(to: string, body: string): Promise<void>;
+  sendMessage(phoneNumberId: string, to: string, body: string): Promise<void>;
   parseIncomingMessage(payload: unknown): WhatsAppMessage | null;
 }

@@ -10,6 +10,11 @@ CREATE TABLE IF NOT EXISTS doctors (
   calendar_config TEXT NOT NULL, -- JSON: { workingHours: [...], slotDurationMinutes: number }
   subscription_status TEXT NOT NULL DEFAULT 'trial' CHECK (subscription_status IN ('active', 'inactive', 'trial')),
   subscription_expires_at TEXT,
+  -- Kapso WhatsApp integration
+  kapso_setup_link_id TEXT,
+  kapso_phone_number_id TEXT,
+  kapso_waba_id TEXT,
+  whatsapp_status TEXT DEFAULT 'pending' CHECK (whatsapp_status IN ('pending', 'connected', 'error')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

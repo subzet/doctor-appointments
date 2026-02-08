@@ -17,6 +17,11 @@ export interface Doctor {
   };
   subscriptionStatus: 'active' | 'inactive' | 'trial';
   subscriptionExpiresAt?: string;
+  // Kapso WhatsApp integration
+  kapsoSetupLinkId?: string;
+  kapsoPhoneNumberId?: string;
+  kapsoWabaId?: string;
+  whatsappStatus: 'pending' | 'connected' | 'error';
   createdAt: string;
   updatedAt: string;
 }

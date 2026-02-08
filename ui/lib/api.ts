@@ -34,6 +34,22 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Kapso WhatsApp Setup
+  createSetupLink: (doctorId: string) =>
+    fetchApi<{ setupLinkId: string; url: string; status: string }>(`/doctors/${doctorId}/setup-link`, {
+      method: 'POST',
+    }),
+  getWhatsappStatus: (doctorId: string) =>
+    fetchApi<{ 
+      status: 'pending' | 'connected' | 'error'; 
+      setupLinkId?: string;
+      phoneNumberId?: string;
+      wabaId?: string;
+      phoneNumber?: string;
+      displayName?: string;
+      connectedAt?: string;
+    }>(`/doctors/${doctorId}/whatsapp-status`),
+
   // Whitelist
   getWhitelist: (doctorId: string) =>
     fetchApi<WhitelistEntry[]>(`/doctors/${doctorId}/whitelist`),

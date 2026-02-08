@@ -24,7 +24,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
-  completeOnboarding: (data: { name: string; phoneNumber: string; specialty?: string }) => Promise<void>;
+  completeOnboarding: (data: { name: string; specialty?: string }) => Promise<{ doctor: Doctor }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -92,20 +92,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsNewUser(false);
   };
 
-  const completeOnboarding = async (data: { name: string; phoneNumber: string; specialty?: string }) => {
+  const completeOnboarding = async (data: { name: string; specialty?: string }): Promise<{ doctor: Doctor }> => {
     if (!user) throw new Error('No user logged in');
     
     setLoading(true);
     try {
       const updatedDoctor = await api.updateDoctor(user.uid, {
         name: data.name,
-        phoneNumber: data.phoneNumber,
         specialty: data.specialty,
       });
       
       setDoctor(updatedDoctor);
       setIsNewUser(false);
-      router.push('/');
+      return { doctor: updatedDoctor };
     } catch (error) {
       console.error('Error completing onboarding:', error);
       throw error;

@@ -55,6 +55,9 @@
   - [x] Edit welcome message
   - [x] View available hours
   - [x] Payment link configuration
+  - [x] WhatsApp number configuration
+  - [x] Whitelist mode toggle
+  - [x] Whitelist management (add/remove numbers)
 
 ## Phase 5: Patient Management ✅
 **Goal:** Complete patient history and search
@@ -91,14 +94,21 @@
 **Phase:** 4-5 (Admin UI + Patient Management)
 
 **Completed Today:**
-1. ✅ Firebase Google Sign-In
-2. ✅ Onboarding flow for new doctors
-3. ✅ Doctor creation/sync on first login
-4. ✅ Dynamic doctor ID in dashboard
+1. ✅ WhatsApp whitelist configuration
+   - Backend: whitelist_mode field and doctor_whitelist table
+   - Backend: WhitelistService and repository
+   - Backend: API endpoints for whitelist management
+   - Backend: BotFlowHandler whitelist verification
+   - Frontend: WhatsApp number configuration
+   - Frontend: Whitelist toggle and management UI
+2. ✅ Firebase Google Sign-In
+3. ✅ Onboarding flow for new doctors
+4. ✅ Doctor creation/sync on first login
+5. ✅ Dynamic doctor ID in dashboard
 
 **Next Tasks:**
-1. Test onboarding flow end-to-end
-2. Add proper error handling in auth flow
+1. Test WhatsApp whitelist flow end-to-end
+2. Add Kapso AI webhook integration for real WhatsApp messages
 3. Implement cron job for reminders
 4. Add tests for services
 5. Mercado Pago subscription integration
