@@ -15,7 +15,7 @@
 - [x] Implement basic message handler
 - [x] Add environment configuration
 
-## Phase 2: Core Bot Flow 🚧
+## Phase 2: Core Bot Flow ✅
 **Goal:** Working appointment booking via WhatsApp
 
 - [x] Configurable welcome message per doctor
@@ -26,7 +26,7 @@
   - [x] Save to database
 - [x] Send payment information (Mercado Pago link)
 - [x] Appointment confirmation message
-- [ ] Basic error handling and fallbacks
+- [x] Basic error handling and fallbacks
 
 ## Phase 3: Notifications ✅
 **Goal:** Automated reminders and follow-ups
@@ -37,25 +37,25 @@
 - [ ] Reschedule/cancel flow
 - [ ] Missed appointment handling
 
-## Phase 4: Admin UI
+## Phase 4: Admin UI ✅
 **Goal:** Web interface for doctors
 
-- [ ] Next.js project setup
+- [x] Next.js project setup
 - [ ] Authentication (simple password or magic link)
-- [ ] Dashboard with upcoming appointments
-- [ ] Calendar view (read-only for now)
+- [x] Dashboard with upcoming appointments
+- [x] Calendar view (read-only for now)
 - [ ] Chat history viewer
-- [ ] Configuration panel
-  - [ ] Edit welcome message
-  - [ ] Set available hours
-  - [ ] Payment link configuration
+- [x] Configuration panel
+  - [x] Edit welcome message
+  - [x] View available hours
+  - [x] Payment link configuration
 
-## Phase 5: Patient Management
+## Phase 5: Patient Management ✅
 **Goal:** Complete patient history and search
 
-- [ ] Patient list with search
-- [ ] Patient profile page
-- [ ] Appointment history per patient
+- [x] Patient list with search
+- [x] Patient profile page
+- [x] Appointment history per patient
 - [ ] Notes/observations field
 - [ ] Export patient data
 
@@ -82,12 +82,40 @@
 
 ## Current Status
 
-**Phase:** 2-3 (Core Bot Flow + Notifications)
+**Phase:** 4-5 (Admin UI + Patient Management)
 
 **Next Tasks:**
-1. Add tests for services
-2. Implement reschedule/cancel flow
-3. Set up cron job for reminders
-4. Start Admin UI (Next.js)
+1. Add authentication to admin UI
+2. Implement cron job for reminders
+3. Add tests for services
+4. Mercado Pago subscription integration
 
 **Blocked by:** None
+
+---
+
+## Project Structure
+
+```
+doctor-appointments/
+├── src/
+│   ├── domain/              # Entities & ports (Doctor, Patient, Appointment)
+│   ├── application/         # Services & bot flow handler
+│   ├── infrastructure/      # Turso DB, WhatsApp (Kapso)
+│   ├── interfaces/          # API routes & webhook handlers
+│   └── index.ts             # Hono server
+├── ui/                      # Next.js admin dashboard
+│   ├── app/
+│   │   ├── components/      # Appointments, Patients, Settings tabs
+│   │   ├── page.tsx         # Dashboard main page
+│   │   └── layout.tsx
+│   ├── components/ui/       # shadcn/ui components
+│   └── lib/
+│       ├── api.ts           # API client
+│       └── types.ts         # TypeScript types
+├── scripts/
+│   ├── migrate.ts           # Database migrations
+│   └── send-reminders.ts    # Daily reminder script
+├── AGENTS.md                # Repository overview
+└── ROADMAP.md               # This file
+```
