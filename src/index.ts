@@ -4,11 +4,13 @@ import { closeDb } from './infrastructure/database/client.js';
 import { TursoDoctorRepository } from './infrastructure/database/doctor-repository.js';
 import { TursoPatientRepository } from './infrastructure/database/patient-repository.js';
 import { TursoAppointmentRepository } from './infrastructure/database/appointment-repository.js';
+import { TursoWhitelistRepository } from './infrastructure/database/whitelist-repository.js';
 import { KapsoWhatsAppService } from './infrastructure/whatsapp/kapso-service.js';
 import { 
   DoctorService, 
   PatientService, 
-  AppointmentService 
+  AppointmentService,
+  WhitelistService
 } from './application/index.js';
 import { BotFlowHandler } from './application/bot-flow-handler.js';
 import { createWebhookRouter, createApiRouter } from './interfaces/index.js';
@@ -17,6 +19,7 @@ import { createWebhookRouter, createApiRouter } from './interfaces/index.js';
 const doctorRepository = new TursoDoctorRepository();
 const patientRepository = new TursoPatientRepository();
 const appointmentRepository = new TursoAppointmentRepository();
+const whitelistRepository = new TursoWhitelistRepository();
 
 // Initialize services
 const whatsAppService = new KapsoWhatsAppService();
@@ -27,13 +30,15 @@ const appointmentService = new AppointmentService(
   patientRepository,
   whatsAppService
 );
+const whitelistService = new WhitelistService(whitelistRepository);
 
 // Initialize bot flow handler
 const botFlowHandler = new BotFlowHandler(
   doctorService,
   patientService,
   appointmentService,
-  whatsAppService
+  whatsAppService,
+  whitelistService
 );
 
 // Create main app
@@ -65,6 +70,7 @@ app.route('/api', createApiRouter({
   doctorService,
   patientService,
   appointmentService,
+  whitelistService,
 }));
 
 app.route('/', createWebhookRouter({

@@ -8,6 +8,7 @@ import type {
   DoctorService, 
   PatientService, 
   AppointmentService,
+  WhitelistService,
   BookingSession 
 } from '../application/index.js';
 
@@ -16,7 +17,8 @@ export class BotFlowHandler {
     private doctorService: DoctorService,
     private patientService: PatientService,
     private appointmentService: AppointmentService,
-    private whatsAppService: WhatsAppService
+    private whatsAppService: WhatsAppService,
+    private whitelistService: WhitelistService
   ) {}
 
   async handleIncomingMessage(from: string, body: string, doctorPhoneNumber: string): Promise<void> {
@@ -25,6 +27,18 @@ export class BotFlowHandler {
     if (!doctor) {
       console.error(`Doctor not found for phone number: ${doctorPhoneNumber}`);
       return;
+    }
+
+    // Check whitelist if enabled
+    if (doctor.whitelistMode) {
+      const isAllowed = await this.whitelistService.isPhoneNumberAllowed(doctor.id, from);
+      if (!isAllowed) {
+        await this.whatsAppService.sendMessage(
+          from,
+          'Lo sentimos, este número no está autorizado para reservar turnos. Por favor, contactá al consultorio para más información.'
+        );
+        return;
+      }
     }
 
     // Check subscription

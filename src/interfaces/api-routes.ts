@@ -1,10 +1,11 @@
 import { Hono } from 'hono';
-import type { DoctorService, PatientService, AppointmentService } from '../application/index.js';
+import type { DoctorService, PatientService, AppointmentService, WhitelistService } from '../application/index.js';
 
 interface Dependencies {
   doctorService: DoctorService;
   patientService: PatientService;
   appointmentService: AppointmentService;
+  whitelistService: WhitelistService;
 }
 
 export function createApiRouter(deps: Dependencies): Hono {
@@ -70,6 +71,45 @@ export function createApiRouter(deps: Dependencies): Hono {
     } catch (error) {
       return c.json({ error: (error as Error).message }, 400);
     }
+  });
+
+  // Whitelist routes
+  router.get('/doctors/:doctorId/whitelist', async (c) => {
+    const doctorId = c.req.param('doctorId');
+    const entries = await deps.whitelistService.getWhitelistByDoctorId(doctorId);
+    return c.json(entries);
+  });
+
+  router.post('/doctors/:doctorId/whitelist', async (c) => {
+    const doctorId = c.req.param('doctorId');
+    const body = await c.req.json();
+    
+    if (!body.phoneNumber) {
+      return c.json({ error: 'phoneNumber is required' }, 400);
+    }
+
+    try {
+      const entry = await deps.whitelistService.addToWhitelist(
+        doctorId,
+        body.phoneNumber,
+        body.patientName,
+        body.notes
+      );
+      return c.json(entry, 201);
+    } catch (error) {
+      return c.json({ error: (error as Error).message }, 400);
+    }
+  });
+
+  router.delete('/whitelist/:id', async (c) => {
+    const id = c.req.param('id');
+    const success = await deps.whitelistService.removeFromWhitelist(id);
+    
+    if (!success) {
+      return c.json({ error: 'Entry not found' }, 404);
+    }
+    
+    return c.json({ status: 'deleted' });
   });
 
   // Patient routes

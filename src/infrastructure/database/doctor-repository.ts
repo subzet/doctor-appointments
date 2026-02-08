@@ -47,17 +47,19 @@ export class TursoDoctorRepository implements DoctorRepository {
     
     await db.execute({
       sql: `
-        INSERT INTO doctors (id, name, phone_number, specialty, welcome_message, payment_link, calendar_config, created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO doctors (id, name, phone_number, whatsapp_number, specialty, welcome_message, payment_link, calendar_config, whitelist_mode, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       args: [
         id,
         input.name,
         input.phoneNumber,
+        input.whatsappNumber ?? null,
         input.specialty ?? null,
         welcomeMessage,
         input.paymentLink ?? null,
         JSON.stringify(DEFAULT_CALENDAR_CONFIG),
+        input.whitelistMode ? 1 : 0,
         now,
         now,
       ],
@@ -74,7 +76,7 @@ export class TursoDoctorRepository implements DoctorRepository {
     if (!existing) return null;
 
     const updates: string[] = [];
-    const args: (string | null)[] = [];
+    const args: (string | number | null)[] = [];
 
     if (input.name !== undefined) {
       updates.push('name = ?');
@@ -83,6 +85,10 @@ export class TursoDoctorRepository implements DoctorRepository {
     if (input.phoneNumber !== undefined) {
       updates.push('phone_number = ?');
       args.push(input.phoneNumber);
+    }
+    if (input.whatsappNumber !== undefined) {
+      updates.push('whatsapp_number = ?');
+      args.push(input.whatsappNumber);
     }
     if (input.specialty !== undefined) {
       updates.push('specialty = ?');
@@ -95,6 +101,10 @@ export class TursoDoctorRepository implements DoctorRepository {
     if (input.paymentLink !== undefined) {
       updates.push('payment_link = ?');
       args.push(input.paymentLink);
+    }
+    if (input.whitelistMode !== undefined) {
+      updates.push('whitelist_mode = ?');
+      args.push(input.whitelistMode ? 1 : 0);
     }
     if (input.calendarConfig !== undefined) {
       updates.push('calendar_config = ?');
@@ -137,9 +147,11 @@ export class TursoDoctorRepository implements DoctorRepository {
       id: row.id as string,
       name: row.name as string,
       phoneNumber: row.phone_number as string,
+      whatsappNumber: row.whatsapp_number as string | undefined,
       specialty: row.specialty as string | undefined,
       welcomeMessage: row.welcome_message as string,
       paymentLink: row.payment_link as string | undefined,
+      whitelistMode: Boolean(row.whitelist_mode),
       calendarConfig: JSON.parse(row.calendar_config as string),
       subscriptionStatus: row.subscription_status as Doctor['subscriptionStatus'],
       subscriptionExpiresAt: row.subscription_expires_at ? new Date(row.subscription_expires_at as string) : undefined,

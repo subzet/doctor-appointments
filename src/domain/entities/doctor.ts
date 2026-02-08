@@ -3,9 +3,11 @@ export interface Doctor {
   id: string;
   name: string;
   phoneNumber: string;
+  whatsappNumber?: string;
   specialty?: string;
   welcomeMessage: string;
   paymentLink?: string;
+  whitelistMode: boolean;
   calendarConfig: {
     workingHours: {
       day: 0 | 1 | 2 | 3 | 4 | 5 | 6; // 0 = Sunday
@@ -23,18 +25,32 @@ export interface Doctor {
 export interface CreateDoctorInput {
   name: string;
   phoneNumber: string;
+  whatsappNumber?: string;
   specialty?: string;
   welcomeMessage?: string;
   paymentLink?: string;
+  whitelistMode?: boolean;
 }
 
 export interface UpdateDoctorInput {
   name?: string;
   phoneNumber?: string;
+  whatsappNumber?: string;
   specialty?: string;
   welcomeMessage?: string;
   paymentLink?: string;
+  whitelistMode?: boolean;
   calendarConfig?: Doctor['calendarConfig'];
   subscriptionStatus?: Doctor['subscriptionStatus'];
   subscriptionExpiresAt?: Date;
+}
+
+// Whitelist entry for allowed patient phone numbers
+export interface WhitelistEntry {
+  id: string;
+  doctorId: string;
+  phoneNumber: string;
+  patientName?: string;
+  notes?: string;
+  createdAt: Date;
 }
