@@ -48,6 +48,7 @@
   - [x] Backend: `PATCH /api/doctors/:id` endpoint
   - [x] Frontend: Onboarding page
   - [x] Frontend: Auth context with doctor sync
+  - [x] **Kapso Setup Links integration for WhatsApp onboarding**
 - [x] Dashboard with upcoming appointments
 - [x] Calendar view (read-only for now)
 - [ ] Chat history viewer
@@ -55,7 +56,7 @@
   - [x] Edit welcome message
   - [x] View available hours
   - [x] Payment link configuration
-  - [x] WhatsApp number configuration
+  - [x] WhatsApp number configuration (Kapso integration)
   - [x] Whitelist mode toggle
   - [x] Whitelist management (add/remove numbers)
 
@@ -94,22 +95,22 @@
 **Phase:** 4-5 (Admin UI + Patient Management)
 
 **Completed Today:**
-1. ✅ WhatsApp whitelist configuration
-   - Backend: whitelist_mode field and doctor_whitelist table
-   - Backend: WhitelistService and repository
-   - Backend: API endpoints for whitelist management
-   - Backend: BotFlowHandler whitelist verification
-   - Frontend: WhatsApp number configuration
-   - Frontend: Whitelist toggle and management UI
-2. ✅ Firebase Google Sign-In
-3. ✅ Onboarding flow for new doctors
-4. ✅ Doctor creation/sync on first login
-5. ✅ Dynamic doctor ID in dashboard
+1. ✅ Kapso Platforms integration for WhatsApp onboarding
+   - Backend: KapsoSetupService for setup links and phone number management
+   - Backend: Webhook handler for phone_number.connected events
+   - Backend: `POST /api/doctors/:id/setup-link` endpoint
+   - Backend: `GET /api/doctors/:id/whatsapp-status` endpoint
+   - Database: Added kapso_setup_link_id, kapso_phone_number_id, kapso_waba_id, whatsapp_status fields
+   - Frontend: Updated onboarding with WhatsApp connection step
+   - Frontend: Real-time status polling during setup
+   - Core: Updated KapsoWhatsAppService to use real API (not placeholder)
+   - Core: BotFlowHandler now uses phoneNumberId from Kapso
+   - Core: All message sending updated to use Kapso phoneNumberId
 
 **Next Tasks:**
-1. Test WhatsApp whitelist flow end-to-end
-2. Add Kapso AI webhook integration for real WhatsApp messages
-3. Implement cron job for reminders
+1. Test end-to-end WhatsApp flow with real Kapso credentials
+2. Configure Kapso webhook URL in dashboard
+3. Implement cron job for daily reminders
 4. Add tests for services
 5. Mercado Pago subscription integration
 
