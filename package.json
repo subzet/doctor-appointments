@@ -1,0 +1,22 @@
+{
+  "name": "doctor-appointments",
+  "version": "0.1.0",
+  "description": "WhatsApp bot for private medical practices in Argentina",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "start": "bun dist/index.js",
+    "test": "bun test",
+    "migrate": "bun run scripts/migrate.ts",
+    "deploy": "railway up"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.14.0",
+    "hono": "^4.6.0"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.5.0"
+  }
+}
