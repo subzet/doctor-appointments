@@ -1,7 +1,6 @@
-import './globals.css';
-
 'use client';
 
+import './globals.css';
 import { useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { AuthProvider, useAuth } from '@/lib/auth-context';
