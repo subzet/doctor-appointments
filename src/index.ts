@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { cors } from 'hono/cors';
 import { closeDb } from './infrastructure/database/client.js';
 import { TursoDoctorRepository } from './infrastructure/database/doctor-repository.js';
 import { TursoPatientRepository } from './infrastructure/database/patient-repository.js';
@@ -37,6 +38,14 @@ const botFlowHandler = new BotFlowHandler(
 
 // Create main app
 const app = new Hono();
+
+// Enable CORS for all routes
+app.use('*', cors({
+  origin: ['http://localhost:3001', 'http://127.0.0.1:3001'],
+  allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Authorization'],
+  credentials: true,
+}));
 
 // Health check
 app.get('/', (c) => {
